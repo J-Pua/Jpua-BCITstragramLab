@@ -11,7 +11,7 @@
 const unzipper = require("unzipper"),
   AdmZip = require("adm-zip"),
   fs = require("fs").promises,
-  {createReadStream,createWriteStream}=require("fs"),
+  { createReadStream, createWriteStream } = require("fs"),
   PNG = require("pngjs").PNG,
   path = require("path");
 
@@ -23,18 +23,27 @@ const unzipper = require("unzipper"),
  * @return {promise}
  */
 const unzip = (pathIn, pathOut) => {
-  createReadStream(pathIn)
+  const zip = new AdmZip(pathIn);
+  return new Promise((resolve, reject) => {
+    zip.extractAllToAsync(pathOut, true, false, (err) => {
+      if (err) {
+        reject();
+      } else {
+        resolve();
+      }
+    });
+  });
 };
-const oldunzip = (pathIn,pathOut) => {
-  return new Promise((resolve,reject)=>{
-    const source = fs.createReadStream(zipFilePath);
+const oldunzip = (pathIn, pathOut) => {
+  return new Promise((resolve, reject) => {
+    const source = createReadStream(pathIn);
 
     source
-      .pipe(unzipper.Extract({ path: destinationFolder }))
-      .on('close', () => resolve())
-      .on('error', (err) => reject(err));
-  })
-}
+      .pipe(unzipper.Extract({ path: pathOut }))
+      .on("close", () => resolve())
+      .on("error", (err) => reject(err));
+  });
+};
 /**
  * Description: read all the png files from given directory and return Promise containing array of each png file path
  *
