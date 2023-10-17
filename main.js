@@ -37,14 +37,13 @@ unzip(zipFilePath, pathUnzipped)
     return readDir(pathUnzipped);
   })
   .then((filtered) => {
-    const promiselist = filtered.map((picture) => {
+    Promise.all(filtered.map((picture) => {
       // console.log(path.join(pathUnzipped, picture));
       return grayScale(
         path.join(pathUnzipped, picture),
         path.join(pathProcessed, picture)
       );
-    });
-    Promise.all(promiselist);
+    }));
   })
   .catch((err) => {
     console.error("Error:", err);
