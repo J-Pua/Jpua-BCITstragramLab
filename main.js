@@ -30,18 +30,21 @@ const pathProcessed = path.join(__dirname, "grayscaled");
 //     console.error("Error:", err);
 //   });
 unzip(zipFilePath, pathUnzipped)
-//   .then(() => {
-//     console.log("Succesfully Unzip");
-//   })
-  .then(()=>{
-    return readDir(pathUnzipped)}
-  )
+  //   .then(() => {
+  //     console.log("Succesfully Unzip");
+  //   })
+  .then(() => {
+    return readDir(pathUnzipped);
+  })
   .then((filtered) => {
-      const promiselist = filtered.map((picture) => {
-        // console.log(path.join(pathUnzipped, picture));
-        return grayScale(path.join(pathUnzipped,picture),path.join(pathProcessed,picture));
-      })
-      Promise.all(promiselist)
+    const promiselist = filtered.map((picture) => {
+      // console.log(path.join(pathUnzipped, picture));
+      return grayScale(
+        path.join(pathUnzipped, picture),
+        path.join(pathProcessed, picture)
+      );
+    });
+    Promise.all(promiselist);
   })
   .catch((err) => {
     console.error("Error:", err);
