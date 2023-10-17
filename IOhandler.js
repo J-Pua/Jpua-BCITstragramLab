@@ -8,9 +8,11 @@
  *
  */
 
+const { error } = require("console");
+
 const unzipper = require("unzipper"),
   AdmZip = require("adm-zip"),
-  fs = require("fs").promises,
+  fs = require("fs"),
   { createReadStream, createWriteStream } = require("fs"),
   PNG = require("pngjs").PNG,
   path = require("path");
@@ -27,7 +29,7 @@ const unzip = (pathIn, pathOut) => {
   return new Promise((resolve, reject) => {
     zip.extractAllToAsync(pathOut, true, false, (err) => {
       if (err) {
-        reject();
+        reject(err);
       } else {
         resolve();
       }
@@ -50,7 +52,16 @@ const oldunzip = (pathIn, pathOut) => {
  * @param {string} path
  * @return {promise}
  */
-const readDir = (dir) => {};
+const readDir = (dir) => {
+  return new Promise((resolve, reject) => {
+    fs.readdir(dir, (err, files) => {
+      if (err) {
+        reject(err);
+      }
+      const pngFiles = files.filter((file) => file.endsWith('.png'));
+      resolve(pngFiles);})
+  });
+};
 
 /**
  * Description: Read in png file by given pathIn,
@@ -60,7 +71,38 @@ const readDir = (dir) => {};
  * @param {string} pathProcessed
  * @return {promise}
  */
-const grayScale = (pathIn, pathOut) => {};
+const grayScale = (pathIn, pathOut) => {
+  fs.promises.mkdir(path.dirname(pathOut),{recursive:true}).then(()=>{
+  return new Promise((resolve, reject) => {
+    fs.createReadStream(pathIn)
+    .pipe(new PNG({filterType:4}))
+    .on('parsed', function() {
+      const grayImage = new PNG({ width: this.width, height: this.height });
+
+      for (let y = 0; y < this.height; y++) {
+        for (let x = 0; x < this.width; x++) {
+          const idx = (this.width * y + x) << 2;
+          const value = (this.data[idx] + this.data[idx + 1] + this.data[idx + 2]) / 3;
+          grayImage.data[idx] = value;
+          grayImage.data[idx + 1] = value;
+          grayImage.data[idx + 2] = value;
+          grayImage.data[idx + 3] = 255; // Set alpha channel to fully opaque
+        }
+      }
+
+       grayImage
+        .pack()
+        .pipe(fs.createWriteStream(pathOut))
+        .on('finish',()=> {
+          // console.log(`Grayscale image saved to ${pathOut}`)
+          resolve()
+        })
+        .on('error',(err)=>{reject(err)});
+    });
+
+
+  })})};
+
 
 module.exports = {
   unzip,
